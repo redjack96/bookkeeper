@@ -21,7 +21,7 @@
     <groupId>org.apache.bookkeeper</groupId>
     <artifactId>shaded-parent</artifactId>
     <version>4.15.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>bookkeeper-server-tests-shaded</artifactId>
   <name>Apache BookKeeper :: Shaded :: bookkeeper-server-tests-shaded</name>

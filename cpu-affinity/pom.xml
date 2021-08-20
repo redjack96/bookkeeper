@@ -20,7 +20,7 @@
     <groupId>org.apache.bookkeeper</groupId>
     <artifactId>bookkeeper</artifactId>
     <version>4.15.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>cpu-affinity</artifactId>
@@ -30,6 +30,7 @@
 
   <properties>
     <nar.runtime>dynamic</nar.runtime>
+    <nar.cpp.optionSet>-msse4.2 -mpclmul</nar.cpp.optionSet> <!-- TODO: non so se va bene -->
   </properties>
 
   <dependencies>

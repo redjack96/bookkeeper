@@ -21,7 +21,7 @@
     <groupId>org.apache.bookkeeper</groupId>
     <artifactId>bookkeeper</artifactId>
     <version>4.15.0-SNAPSHOT</version>
-    <relativePath>../..</relativePath>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
   <groupId>org.apache.distributedlog</groupId>
   <artifactId>distributedlog</artifactId>
@@ -45,7 +45,7 @@
         <version>${maven-javadoc-plugin.version}</version>
         <configuration>
           <!-- Avoid for missing javadoc comments to be marked as errors -->
-          <additionalparam>-notimestamp</additionalparam>
+          <additionalOptions>-notimestamp</additionalOptions>
           <doclint>none</doclint>
           <groups>
             <group>

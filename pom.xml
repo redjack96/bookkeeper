@@ -51,26 +51,26 @@
     <url>https://builds.apache.org/job/bookkeeper-master</url>
   </ciManagement>
   <modules>
-    <module>buildtools</module>
-    <module>circe-checksum</module>
+    <module>bookkeeper-benchmark</module>
     <module>bookkeeper-common</module>
     <module>bookkeeper-common-allocator</module>
-    <module>stats</module>
-    <!-- TODO: move `bookkeeper-stats` and `bookkeeper-stats-providers` as submodules of `stats` -->
-    <module>bookkeeper-stats</module>
+    <module>bookkeeper-dist</module>
+    <module>bookkeeper-http</module>
     <module>bookkeeper-proto</module>
     <module>bookkeeper-server</module>
-    <module>bookkeeper-benchmark</module>
+    <!-- TODO: move `bookkeeper-stats` and `bookkeeper-stats-providers` as submodules of `stats` -->
+    <module>bookkeeper-stats</module>
     <module>bookkeeper-stats-providers</module>
-    <module>bookkeeper-http</module>
-    <module>stream</module>
-    <module>tools</module>
+    <module>buildtools</module>
+    <module>circe-checksum</module>
     <module>cpu-affinity</module>
     <module>metadata-drivers</module>
-    <module>bookkeeper-dist</module>
-    <module>shaded</module>
     <module>microbenchmarks</module>
-    <module>tests</module>
+    <module>shaded</module>
+    <module>stats</module>
+    <module>stream</module>
+<!--    <module>tests</module> TODO: aggiungere il mio modulo TEST-->
+    <module>tools</module>
   </modules>
   <mailingLists>
     <mailingList>
@@ -110,6 +110,7 @@
     <javac.target>1.8</javac.target>
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <testRetryCount>2</testRetryCount>
+    <session.executionRootDirectory>${basedir}</session.executionRootDirectory>
 
     <!-- dependencies -->
     <arquillian-cube.version>1.18.2</arquillian-cube.version>
@@ -180,7 +181,7 @@
     <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
     <maven-assembly-plugin.version>3.1.0</maven-assembly-plugin.version>
     <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
-    <maven-clean-plugin.version>2.5</maven-clean-plugin.version>
+    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-dependency-plugin.version>3.0.2</maven-dependency-plugin.version>
     <maven-deploy-plugin.version>2.7</maven-deploy-plugin.version>
@@ -197,6 +198,10 @@
     <spotbugs-maven-plugin.version>3.1.8</spotbugs-maven-plugin.version>
     <forkCount.variable>1</forkCount.variable>
     <servlet-api.version>4.0.0</servlet-api.version>
+
+    <!-- Proprieta aggiunte per SonarCloud-->
+    <sonar.organization>redjack96</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
 
   <!-- dependency definitions -->
@@ -896,7 +901,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${maven-javadoc-plugin.version}</version>
         <configuration>
-          <additionalparam>-notimestamp</additionalparam>
+          <additionalOptions>-notimestamp</additionalOptions>
           <!-- Prevent missing javadoc comments from being marked as errors -->
           <doclint>none</doclint>
           <subpackages>org.apache.bookkeeper.client:org.apache.bookkeeper.client.api:org.apache.bookkeeper.common.annotation:org.apache.bookkeeper.conf:org.apache.bookkeeper.feature:org.apache.bookkeeper.stats</subpackages>
@@ -1033,11 +1038,6 @@
       <id>code-coverage</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.eluder.coveralls</groupId>
-            <artifactId>coveralls-maven-plugin</artifactId>
-            <version>${coveralls-maven-plugin.version}</version>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>

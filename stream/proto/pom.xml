@@ -21,7 +21,7 @@
     <groupId>org.apache.bookkeeper</groupId>
     <artifactId>stream-storage-parent</artifactId>
     <version>4.15.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <groupId>org.apache.bookkeeper</groupId>
   <artifactId>stream-storage-proto</artifactId>
@@ -46,12 +46,6 @@
       <artifactId>javax.annotation-api</artifactId>
       <!-- this should not be bundled in binary distributions -->
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.bookkeeper.tests</groupId>
-      <artifactId>stream-storage-tests-common</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
