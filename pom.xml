@@ -69,7 +69,6 @@
     <module>shaded</module>
     <module>stats</module>
     <module>stream</module>
-<!--    <module>tests</module> TODO: aggiungere il mio modulo TEST-->
     <module>tools</module>
   </modules>
   <mailingLists>
@@ -199,9 +198,13 @@
     <forkCount.variable>1</forkCount.variable>
     <servlet-api.version>4.0.0</servlet-api.version>
 
-    <!-- Proprieta aggiunte per SonarCloud-->
+    <!-- Proprieta' aggiunte per SonarCloud-->
     <sonar.organization>redjack96</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
+    <!-- Proprieta' aggiunta per la coverage Multi-module con JaCoCo -->
+    <aggregate.report.dir>${build.directory}/site/jacoco-aggregate/jacoco.xml</aggregate.report.dir>
+    <sonar.coverage.jacoco.xmlReportPaths>${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <!-- dependency definitions -->
@@ -856,8 +859,25 @@
             </execution>
           </executions>
         </plugin>
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>3.7.0.1746</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <executions>
+            <execution>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
+
     <plugins>
       <plugin>
         <groupId>com.github.spotbugs</groupId>
@@ -1056,12 +1076,26 @@
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.0</version>
+            <version>${jacoco-maven-plugin.version}</version>
             <executions>
               <execution>
                 <goals>
                   <goal>prepare-agent</goal>
                 </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco-maven-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>report</id>
+                <goals>
+                  <goal>report-aggregate</goal>
+                </goals>
+                <phase>verify</phase>
               </execution>
             </executions>
           </plugin>
@@ -1111,7 +1145,6 @@
         </plugins>
       </build>
     </profile>
-
     <profile>
       <id>jdk11-no-spotbugs</id>
       <activation>
@@ -1129,7 +1162,6 @@
         </plugins>
       </build>
     </profile>
-
     <profile>
       <id>apache-release</id>
       <build>
