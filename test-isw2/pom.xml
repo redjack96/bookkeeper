@@ -20,7 +20,7 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>report</id>
+                        <id>report-isw2</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>report-aggregate</goal>

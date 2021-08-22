@@ -24,8 +24,12 @@
   </parent>
   <artifactId>bookkeeper-server</artifactId>
   <name>Apache BookKeeper :: Server</name>
+
   <properties>
+    <!-- Coverage JaCoCO -->
     <sonar.coverage.jacoco.xmlReportPaths>${basedir}/../${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
+    <!-- Versione Pitest -->
+    <pitest.version>1.5.2</pitest.version>
   </properties>
 
   <dependencies>
@@ -185,6 +189,33 @@
   </dependencies>
   <build>
     <plugins>
+      <!-- Aggiunto Pitest per il mutation testing -->
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>${pitest.version}</version>
+        <executions>
+          <execution>
+            <id>pit-report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>mutationCoverage</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <timeoutFactor>1000</timeoutFactor>
+          <targetClasses>
+            <param>org.apache.bookkeeper.bookie.EntryLogger</param>
+            <param>org.apache.bookkeeper.bookie.FileInfo</param>
+          </targetClasses>
+          <targetTests>
+            <param>org.apache.bookkeeper.bookie.EntryLoggerTest</param>
+            <param>org.apache.bookkeeper.bookie.FileInfoTest</param>
+          </targetTests>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
