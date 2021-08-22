@@ -1,11 +1,23 @@
 package org.apache.bookkeeper.bookie;
 
+import io.netty.buffer.ByteBufAllocator;
+import org.apache.bookkeeper.common.allocator.impl.ByteBufAllocatorImpl;
+import org.apache.bookkeeper.conf.ServerConfiguration;
+import org.apache.bookkeeper.util.DiskChecker;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+
+import static org.junit.Assert.*;
+
 // @RunWith(Parameterized.class)
 public class EntryLoggerTest {
-    private EntryLogger entryLogger = Mockito.mock(EntryLogger.class);;
+    private static EntryLogger entryLogger;
 
   /*  public EntryLoggerTest(EntryLogger entryLogger) {
         this.entryLogger = entryLogger;
@@ -19,10 +31,24 @@ public class EntryLoggerTest {
         });
     }*/
 
+    @BeforeClass
+    public static void setUp() throws IOException {
+        ServerConfiguration s = new ServerConfiguration();
+        // File tmpBkData = new File("/tmp/bk-data/");
+        LedgerDirsManager mock = Mockito.mock(LedgerDirsManager.class);
+        // if(!tmpBkData.exists()) tmpBkData.mkdir();
+        entryLogger = new EntryLogger(s, mock);
+    }
+
     @Test
-    public void putInReadChannels() {
-        BufferedChannel mock = Mockito.mock(BufferedChannel.class);
-        entryLogger.putInReadChannels(0L, mock);
+    public void putInReadChannels() throws IOException {
+        File f = new File("/tmp/entryloggertest");
+        f.createNewFile();
+        BufferedChannel bc = new BufferedChannel(ByteBufAllocator.DEFAULT, FileChannel.open(f.toPath()), 4);
+        // ritorna null se non hai messo niente prima
+        assertNull(entryLogger.putInReadChannels(0L, bc));
+        //ritorna bc se hai messo qualcosa prima.
+        assertEquals(bc, entryLogger.putInReadChannels(0L, bc));
     }
 
     @Test
