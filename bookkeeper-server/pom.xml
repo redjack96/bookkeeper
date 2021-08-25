@@ -189,33 +189,6 @@
   </dependencies>
   <build>
     <plugins>
-      <!-- Aggiunto Pitest per il mutation testing -->
-      <plugin>
-        <groupId>org.pitest</groupId>
-        <artifactId>pitest-maven</artifactId>
-        <version>${pitest.version}</version>
-        <executions>
-          <execution>
-            <id>pit-report</id>
-            <phase>test</phase>
-            <goals>
-              <goal>mutationCoverage</goal>
-            </goals>
-          </execution>
-        </executions>
-
-        <configuration>
-          <timeoutFactor>1000</timeoutFactor>
-          <targetClasses>
-            <param>org.apache.bookkeeper.bookie.EntryLogger</param>
-            <param>org.apache.bookkeeper.bookie.FileInfo</param>
-          </targetClasses>
-          <targetTests>
-            <param>org.apache.bookkeeper.bookie.EntryLoggerTest</param>
-            <param>org.apache.bookkeeper.bookie.FileInfoTest</param>
-          </targetTests>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -292,6 +265,40 @@
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>pitest</id>
+      <build>
+        <plugins>
+          <!-- Aggiunto profilo Pitest per il mutation testing -->
+          <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>${pitest.version}</version>
+            <executions>
+              <execution>
+                <id>pit-report</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>mutationCoverage</goal>
+                </goals>
+              </execution>
+            </executions>
+
+            <configuration>
+              <timeoutFactor>1000</timeoutFactor>
+              <targetClasses>
+                <param>org.apache.bookkeeper.bookie.EntryLogger</param>
+                <param>org.apache.bookkeeper.bookie.FileInfo</param>
+              </targetClasses>
+              <targetTests>
+                <param>org.apache.bookkeeper.bookie.EntryLoggerUtil</param>
+                <param>org.apache.bookkeeper.bookie.FileInfoTest</param>
+              </targetTests>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>vertx-http-server</id>
       <dependencies>
