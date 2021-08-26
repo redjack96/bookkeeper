@@ -1,3 +1,23 @@
+/*
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
 package org.apache.bookkeeper.bookie;
 
 import org.apache.commons.io.FileUtils;
@@ -24,7 +44,6 @@ public class TestRead {
     private final Params.FileInfoWrite params;
     private static final String CARTELLA_FILE = "/tmp/file-info";
     private static final String NOME_FILE = IndexPersistenceMgr.getLedgerName(1);
-    private static final String PATHNAME_FILE = CARTELLA_FILE + "/" + NOME_FILE;
     private static File file;
 
     public TestRead(Params.FileInfoWrite params){
@@ -42,8 +61,8 @@ public class TestRead {
         int legalSize = legalBufferString.length();
         int legalEmptySize = 0;
         ByteBuffer[] emptyArray = new ByteBuffer[]{};
-        ByteBuffer[] legalArray = new ByteBuffer[]{FileInfoUtil.createBuffer(legalBufferString)};
-        ByteBuffer[] legalEmptyArray = new ByteBuffer[]{FileInfoUtil.createBuffer("")};
+        ByteBuffer[] legalArray = new ByteBuffer[]{createBuffer(legalBufferString)};
+        ByteBuffer[] legalEmptyArray = new ByteBuffer[]{createBuffer("")};
 
         // array vuoto, posizione = 0 -> 0 perché non ho scritto nulla.
         Params.FileInfoWrite p1 = new Params.FileInfoWrite(emptyArray, 50, 0, true);
@@ -85,10 +104,6 @@ public class TestRead {
      */
     @Test
     public void write(){
-        test();
-    }
-
-    private void test(){
         try {
             FileInfo fileInfo = new FileInfo(file, "testPasswd".getBytes(StandardCharsets.UTF_8), FileInfo.CURRENT_HEADER_VERSION);
             // Prima scrittura
@@ -103,6 +118,9 @@ public class TestRead {
             System.out.println(params.toString() + ": errore: " + e.getMessage() + Arrays.toString(e.getStackTrace()));
             assertTrue(params.isError());
         }
+    }
+    private static ByteBuffer createBuffer(String content) {
+        return ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8));
     }
 
 }
