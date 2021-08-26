@@ -17,6 +17,7 @@ package org.apache.bookkeeper.bookie;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import lombok.Data;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.testutils.BkConfigurationUtil;
 import org.apache.bookkeeper.util.DiskChecker;
@@ -32,8 +33,30 @@ public class EntryLoggerUtil {
     private static final List<File> tempDirs = new ArrayList<>();
     private static File rootDir;
     private static File currentDir; // la directory "current" dentro la quale vengono salvati i file entry log
-    private static final Map<Integer, Long> LEDGER_POSITION_MAP = new HashMap<>(); // dato l'hash formato da ledger id e entry id, viene restituita la posizione
+    private static final Map<Integer, SimpleLedgerEntry> LEDGER_ENTRY_MAP = new HashMap<>(); // dato l'hash formato da ledger id, entry id e entryLogger, viene restituita la entry
     private final Random rand = new Random();
+
+    @Data
+    public static class SimpleLedgerEntry{
+        private EntryLogger entryLogger;
+        private long position;
+        private long ledgerId;
+        private long entryId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SimpleLedgerEntry that = (SimpleLedgerEntry) o;
+            return position == that.position && ledgerId == that.ledgerId && entryId == that.entryId && entryLogger.equals(that.entryLogger);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(ledgerId, entryId, entryLogger);
+        }
+    }
+
     /**
      * @return crea e restituisce la directory in cui bookkeeper crea i log entry files
      */
@@ -89,7 +112,12 @@ public class EntryLoggerUtil {
         try {
             EntryLogger entryLogger = createEmptyEntryLogger();
             long positionInEntryLog = addEntryToLogger(entryLogger, ledgerId, entryId);
-            LEDGER_POSITION_MAP.put(getHash(ledgerId, entryId), positionInEntryLog);
+            SimpleLedgerEntry simpleLedgerEntry = new SimpleLedgerEntry();
+            simpleLedgerEntry.setEntryLogger(entryLogger);
+            simpleLedgerEntry.setLedgerId(ledgerId);
+            simpleLedgerEntry.setEntryId(entryId);
+            simpleLedgerEntry.setPosition(positionInEntryLog);
+            LEDGER_ENTRY_MAP.put(getHash(ledgerId, entryId, entryLogger), simpleLedgerEntry);
             return entryLogger;
         } catch (Exception e) {
             deleteDirs();
@@ -102,6 +130,8 @@ public class EntryLoggerUtil {
         DiskChecker diskChecker = new DiskChecker(conf.getDiskUsageThreshold(), conf.getDiskUsageWarnThreshold());
         return new LedgerDirsManager(conf, new File[]{rootDir}, diskChecker);
     }
+
+
 
     /**
      * Genera una entry con contenuti casuali.
@@ -160,17 +190,19 @@ public class EntryLoggerUtil {
      * Metodo che a partire da ledgerId e entryId ricava la posizione corretta nell'entryLog
      * @param ledgerId id del ledger
      * @param entryId id della entry nel ledger
+     * @param entryLogger una istanza di entryLogger su cui esiste la entry
      * @return -1 se non trova nulla, altrimenti l'offset.
      */
-    public static long getPositionInEntryLog(long ledgerId, long entryId) {
-        int hash = getHash(ledgerId, entryId); // ricavo l'hash univoco generato da ledgerId e entryId
+    public static long getPositionInEntryLog(long ledgerId, long entryId, EntryLogger entryLogger) {
+        int hash = getHash(ledgerId, entryId, entryLogger); // ricavo l'hash univoco generato da ledgerId e entryId
 
-        Long l = EntryLoggerUtil.LEDGER_POSITION_MAP.get(hash);
-        if (l != null) return l;
+        SimpleLedgerEntry s = EntryLoggerUtil.LEDGER_ENTRY_MAP.get(hash);
+        if (s != null)
+            return s.getPosition();
         return -1;
     }
 
-    private static int getHash(long a, long b){
-        return Objects.hash(1L, a, 2L, b);
+    private static int getHash(long a, long b, EntryLogger e){
+        return Objects.hash(a, b, e);
     }
 }

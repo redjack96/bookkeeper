@@ -1,8 +1,6 @@
 package org.apache.bookkeeper.bookie;
 
 import lombok.Data;
-import org.apache.bookkeeper.client.LedgerEntry;
-import org.apache.bookkeeper.client.impl.LedgerEntryImpl;
 
 /**
  * Classe che possiede al suo interno delle classi interne
@@ -17,44 +15,34 @@ public class Params {
         private final EntryLogger entryLogger;
         private final long ledgerId;
         private final long entryId;
-        private final Offset offsetType;
         private final boolean isExpectedSuccess;
         private long offset;
+        private EntryLoggerUtil.SimpleLedgerEntry simpleEntry;
+
+        public String toString(){
+            return "LEDGER " + ledgerId + " ENTRY " + entryId + " OFFSET " + offset;
+        }
 
         /**
          * Crea un set di parametri da passare al test TestCheckEntry
-         * @param status status dell' EntryLogger: EMPTY, CONTAINS_ENTRY o NOT_CONTAINS_ENTRY
-         * @param ledgerId un qualsiasi long che rappresenta l'id del ledger
-         * @param entryId un qualsiasi long che rappresenta l'id della entry
-         * @param offsetType COMPATIBLE, INCOMPATIBLE, NEGATIVE
+         * @param entryLogger una istanza valida di entryLogger, non nulla. Può essere vuoto o contenere dei ledger.
+         * @param ledgerId un qualsiasi long che rappresenta l'id del ledger (o che non lo rappresenti)
+         * @param entryId un qualsiasi long che rappresenta l'id della entry (o che non lo rappresenti)
+         * @param offset posizione ricavata con EntryLoggerUtil.getPositionInEntryLog()
          * @param isExpectedSuccess false se il metodo checkEntry deve causare un' eccezione, true se deve avere successo
          */
-        public CheckEntry(EntryLoggerStatus status, long ledgerId, long entryId, Offset offsetType, boolean isExpectedSuccess) {
-            switch (status) {
-                case CONTAINS_ENTRY:
-                    this.entryLogger = EntryLoggerUtil.createNonEmptyEntryLogger(ledgerId, entryId);
-                    break;
-                case NOT_CONTAINS_ENTRY:
-                    this.entryLogger = EntryLoggerUtil.createNonEmptyEntryLogger(ledgerId + 30L, entryId + 40L);
-                    break;
-                default:
-                    this.entryLogger = EntryLoggerUtil.createEmptyEntryLogger();
-                    break;
-            }
+        public CheckEntry(EntryLogger entryLogger, long ledgerId, long entryId, long offset, boolean isExpectedSuccess) {
+            this.entryLogger = entryLogger;
             this.ledgerId = ledgerId;
             this.entryId = entryId;
-            this.offsetType = offsetType; // possibilmente usare il metodo getPositionOfEntryInLog, quando implementato.
+            this.offset = offset; // possibilmente usare il metodo getPositionOfEntryInLog, quando implementato.
             this.isExpectedSuccess = isExpectedSuccess;
 
-            switch(offsetType){
-                case NEGATIVE:
-                    this.offset = -1;
-                case COMPATIBLE:
-                    this.offset = EntryLoggerUtil.getPositionInEntryLog(ledgerId, entryId);
-                case INCOMPATIBLE:
-                    this.offset = 0;
-            }
-
+            this.simpleEntry = new EntryLoggerUtil.SimpleLedgerEntry();
+            simpleEntry.setEntryLogger(entryLogger); // può essere vuoto
+            simpleEntry.setPosition(offset); // può essere sbagliata!!!
+            simpleEntry.setLedgerId(ledgerId); // può essere qualsiasi cosa
+            simpleEntry.setEntryId(entryId); // idem
         }
     }
 }
