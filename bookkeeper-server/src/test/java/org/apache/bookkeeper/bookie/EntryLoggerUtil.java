@@ -60,7 +60,7 @@ public class EntryLoggerUtil {
     /**
      * @return crea e restituisce la directory in cui bookkeeper crea i log entry files
      */
-    public static File createTempDir(String prefix, String suffix) {
+    public static void createTempDir(String prefix, String suffix) {
         try {
             File dir = IOUtils.createTempDir(prefix, suffix);
 
@@ -73,7 +73,6 @@ public class EntryLoggerUtil {
             EntryLoggerUtil.tempDirs.add(dir);
             EntryLoggerUtil.rootDir = dir;
             EntryLoggerUtil.currentDir = currentDir;
-            return dir;
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalStateException("Impossibile creare le cartelle temporanee");
@@ -121,7 +120,41 @@ public class EntryLoggerUtil {
             return entryLogger;
         } catch (Exception e) {
             deleteDirs();
-            throw new IllegalStateException("impossibile creare un EntryLogger con una entry: " + e.getMessage());
+            throw new IllegalStateException("Impossibile creare un EntryLogger con una entry: " + e.getMessage());
+        }
+    }
+
+    public static EntryLogger createEntryLoggerWithTwoLedgerWithOneEntry(long ledgerId, long entryId, long ledgerId2, long entryId2) {
+        try {
+            EntryLogger entryLogger = createNonEmptyEntryLogger(ledgerId, entryId);
+            long positionInEntryLog = addEntryToLogger(entryLogger, ledgerId2, entryId2);
+            SimpleLedgerEntry simpleLedgerEntry = new SimpleLedgerEntry();
+            simpleLedgerEntry.setEntryLogger(entryLogger);
+            simpleLedgerEntry.setLedgerId(ledgerId2);
+            simpleLedgerEntry.setEntryId(entryId2);
+            simpleLedgerEntry.setPosition(positionInEntryLog);
+            LEDGER_ENTRY_MAP.put(getHash(ledgerId2, entryId2, entryLogger), simpleLedgerEntry);
+            return entryLogger;
+        } catch (Exception e) {
+            deleteDirs();
+            throw new IllegalStateException("Impossibile creare un EntryLogger con due ledger ciascuno con una entry: " + e.getMessage());
+        }
+    }
+
+    public static EntryLogger createEntryLoggerWithOneLedgerWithTwoEntries(long ledgerId, long entryId, long entryId2) {
+        try {
+            EntryLogger entryLogger = createNonEmptyEntryLogger(ledgerId, entryId);
+            long positionInEntryLog = addEntryToLogger(entryLogger, ledgerId, entryId2);
+            SimpleLedgerEntry simpleLedgerEntry = new SimpleLedgerEntry();
+            simpleLedgerEntry.setEntryLogger(entryLogger);
+            simpleLedgerEntry.setLedgerId(ledgerId);
+            simpleLedgerEntry.setEntryId(entryId2);
+            simpleLedgerEntry.setPosition(positionInEntryLog);
+            LEDGER_ENTRY_MAP.put(getHash(ledgerId, entryId2, entryLogger), simpleLedgerEntry);
+            return entryLogger;
+        } catch (Exception e) {
+            deleteDirs();
+            throw new IllegalStateException("Impossibile creare un EntryLogger con un ledger con due entries: " + e.getMessage());
         }
     }
 
@@ -130,8 +163,6 @@ public class EntryLoggerUtil {
         DiskChecker diskChecker = new DiskChecker(conf.getDiskUsageThreshold(), conf.getDiskUsageWarnThreshold());
         return new LedgerDirsManager(conf, new File[]{rootDir}, diskChecker);
     }
-
-
 
     /**
      * Genera una entry con contenuti casuali.
@@ -157,7 +188,7 @@ public class EntryLoggerUtil {
      * @param entry id della entry
      * @return ByteBuf che rappresenta la entry completo di metadati e dati.
      */
-    private static ByteBuf generateEntry(long ledger, long entry) {
+    public static ByteBuf generateEntry(long ledger, long entry) {
         byte[] data = generateDataString(ledger, entry).getBytes();
         ByteBuf bb = Unpooled.buffer(8 + 8 + data.length);
         bb.writeLong(ledger);
