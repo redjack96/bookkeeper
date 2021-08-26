@@ -20,10 +20,11 @@ public class Params {
 
         /**
          * Crea un set di parametri da passare al test TestCheckEntry o TestReadEntry
-         * @param ledgerId un qualsiasi long che rappresenta l'id del ledger (o che non lo rappresenti)
-         * @param entryId un qualsiasi long che rappresenta l'id della entry (o che non lo rappresenti)
-         * @param offset posizione ricavata con EntryLoggerUtil.getPositionInEntryLog()
-         * @param entryLogger una istanza valida di entryLogger, non nulla. Può essere vuoto o contenere dei ledger.
+         *
+         * @param ledgerId          un qualsiasi long che rappresenta l'id del ledger (o che non lo rappresenti)
+         * @param entryId           un qualsiasi long che rappresenta l'id della entry (o che non lo rappresenti)
+         * @param offset            posizione ricavata con EntryLoggerUtil.getPositionInEntryLog()
+         * @param entryLogger       una istanza valida di entryLogger, non nulla. Può essere vuoto o contenere dei ledger.
          * @param isExpectedSuccess false se il metodo checkEntry deve causare un' eccezione, true se deve avere successo
          */
         public Entry(long ledgerId, long entryId, long offset, EntryLogger entryLogger, boolean isExpectedSuccess) {
@@ -34,7 +35,7 @@ public class Params {
             this.isExpectedSuccess = isExpectedSuccess;
         }
 
-        public String toString(){
+        public String toString() {
             return "LEDGER " + ledgerId + " ENTRY " + entryId + " OFFSET " + offset;
         }
     }
@@ -44,14 +45,16 @@ public class Params {
         private ByteBuffer[] buffs;
         private long position;
         private long expectedWrittenBytes;
+        private boolean error;
 
-        public FileInfoWrite(ByteBuffer[] buffs, long position, long expectedWrittenBytes) {
+        public FileInfoWrite(ByteBuffer[] buffs, long position, long expectedWrittenBytes, boolean error) {
             this.buffs = buffs;
             this.position = position;
             this.expectedWrittenBytes = expectedWrittenBytes;
+            this.error = error;
         }
 
-        public String toString(){
+        public String toString() {
             return "BUFFERS " + buffs.length + " POSITION " + position + " EXPECTED " + expectedWrittenBytes;
         }
     }

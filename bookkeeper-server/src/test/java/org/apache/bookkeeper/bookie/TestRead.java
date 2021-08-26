@@ -8,15 +8,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test del metodo FileInfo::read
@@ -39,54 +37,72 @@ public class TestRead {
         file.getParentFile().mkdirs();
     }
 
-    private static List<Params.FileInfoWrite> configure() throws IOException {
+    private static List<Params.FileInfoWrite> configure() {
+        String legalBufferString = "ciao";
+        int legalSize = legalBufferString.length();
+        int legalEmptySize = 0;
         ByteBuffer[] emptyArray = new ByteBuffer[]{};
-        ByteBuffer[] legalArray = new ByteBuffer[]{FileInfoUtil.createBuffer("ciao")};
+        ByteBuffer[] legalArray = new ByteBuffer[]{FileInfoUtil.createBuffer(legalBufferString)};
         ByteBuffer[] legalEmptyArray = new ByteBuffer[]{FileInfoUtil.createBuffer("")};
 
         // array vuoto, posizione = 0 -> 0 perché non ho scritto nulla.
-        Params.FileInfoWrite p1 = new Params.FileInfoWrite(emptyArray, 0, 0);
+        Params.FileInfoWrite p1 = new Params.FileInfoWrite(emptyArray, 50, 0, true);
 
-        // array vuoto, position = -1 -> IOException
+        // array con un elemento legale lungo N, position = -1/0/1/100 -> N
+        Params.FileInfoWrite p2 = new Params.FileInfoWrite(legalArray, 0, legalSize, false);
+        Params.FileInfoWrite p3 = new Params.FileInfoWrite(legalArray, 1, legalSize, false);
+        Params.FileInfoWrite p4 = new Params.FileInfoWrite(legalArray, 2, legalSize, false);
+        Params.FileInfoWrite p5 = new Params.FileInfoWrite(legalArray, -1024, legalSize, false);
 
-        // array vuoto, posizione = 1 -> 0
-        // array vuoto, posizione size-2 -> 0
-        // array vuoto, posizione size-1 -> 0
-        // array con un elemento legale lungo N, position = -1 -> IOException
-        // array con un elemento legale lungo N, posizione = 0 -> N perché non ho scritto nulla.
-        // array con un elemento legale lungo N, posizione = 1 -> N
-        // array con un elemento legale lungo N, posizione size-2 -> 1
-        // array con un elemento legale lungo N, posizione size-1 -> 0
-        // array con un buffer vuoto , position = -1 -> IOException
-        // array con un buffer vuoto, posizione = 0 -> 0 perché non ho scritto nulla.
-        // array con un buffer vuoto, posizione = 1 -> 0
-        // array con un buffer vuoto, posizione size-2 -> 0
-        // array con un buffer vuoto, posizione size-1 -> 0
+        // array con un buffer vuoto, posizione = -1/0/1/100 -> 0 perché non ho scritto nulla.
+        Params.FileInfoWrite p6 = new Params.FileInfoWrite(legalEmptyArray, -1, legalEmptySize, false);
+        Params.FileInfoWrite p7 = new Params.FileInfoWrite(legalEmptyArray, 0, legalEmptySize, false);
+        Params.FileInfoWrite p8 = new Params.FileInfoWrite(legalEmptyArray, 1, legalEmptySize, false);
+        Params.FileInfoWrite p9 = new Params.FileInfoWrite(legalEmptyArray, 100, legalEmptySize, false);
 
-
-        return Arrays.asList(p1);
+        return Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8, p9);
     }
 
-    @Parameterized.Parameters
-    public static Collection<Params.FileInfoWrite> data() throws IOException {
+    @Parameterized.Parameters(name = "{index} : {0}")
+    public static Collection<Params.FileInfoWrite> getParameters() {
         return configure();
     }
 
     @After
     public void eliminaFile(){
+        for (ByteBuffer buff : params.getBuffs()) {
+            buff.position(0);
+        }
         FileUtils.deleteQuietly(file);
     }
 
 
+    /**
+     * Esegue il metodo write.
+     * La prima volta, se ci aspettiamo che ha successo, e il metodo ha successo,
+     * controlliamo che scrive esattamente i byte che ci aspettavamo. Altrimenti controlliamo
+     * che ci aspettavamo un errore.
+     */
     @Test
     public void write(){
+        test();
+    }
+
+    private void test(){
         try {
             FileInfo fileInfo = new FileInfo(file, "testPasswd".getBytes(StandardCharsets.UTF_8), FileInfo.CURRENT_HEADER_VERSION);
-            fileInfo.write(new ByteBuffer[]{ ByteBuffer.wrap("BKLE".getBytes(StandardCharsets.UTF_8)) }, 0);
+            // Prima scrittura
             assertEquals(params.getExpectedWrittenBytes(), fileInfo.write(params.getBuffs(), params.getPosition()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assertTrue(params.getExpectedWrittenBytes() == -1);
+            assertFalse(params.isError());
+            if(params.getBuffs().length > 0) {
+                System.out.printf("Scritti correttamente %d bytes%n", params.getExpectedWrittenBytes());
+            } else {
+                System.out.println("Scritti 0 bytes.");
+            }
+        } catch (Exception e) {
+            System.out.println(params.toString() + ": errore: " + e.getMessage() + Arrays.toString(e.getStackTrace()));
+            assertTrue(params.isError());
         }
     }
+
 }
