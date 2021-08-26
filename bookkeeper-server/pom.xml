@@ -291,8 +291,8 @@
                 <param>org.apache.bookkeeper.bookie.FileInfo</param>
               </targetClasses>
               <targetTests>
-                <param>org.apache.bookkeeper.bookie.EntryLoggerUtil</param>
-                <param>org.apache.bookkeeper.bookie.FileInfoTest</param>
+                <param>org.apache.bookkeeper.bookie.Test*</param>
+                <param>org.apache.bookkeeper.client.Test*</param>
               </targetTests>
             </configuration>
           </plugin>

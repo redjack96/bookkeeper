@@ -15,16 +15,11 @@
  */
 package org.apache.bookkeeper.bookie;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.Mockito;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -47,27 +42,40 @@ public class TestCheckEntry {
     }
 
     /**
-     * Chiamato da getParameters() per configurare la cartella di bookkeeper
+     * Chiamato da getParameters() per configurare la cartella di bookkeeper prima di iniziare i test.
+     * getParameters() viene eseguito PRIMA di un metodo @BeforeClass
      */
     public static void configure() {
-        System.out.println("Beforeclass");
-        f = new File(EntryLoggerUtil.BOOKKEEPER_DIRECTORY);
-        f.mkdirs();
-        File f2 = new File(EntryLoggerUtil.BOOKKEEPER_DIRECTORY+"/current/");
-        if(!f2.exists()) f2.mkdirs();
+       File f = EntryLoggerUtil.createTempDir("bkTest", ".dir");
+
     }
 
-    @AfterClass
-    public static void afterClass() throws Exception {
-        FileUtils.deleteDirectory(f);
+    /**
+     * Elimino l' entry logger e la cartella temporanea
+     */
+    @After
+    public void afterClass() {
+        EntryLogger entryLogger = params.getEntryLogger();
+        if(entryLogger!=null) entryLogger.shutdown();
+        EntryLoggerUtil.deleteDirs();
     }
 
     @Parameterized.Parameters
     public static Collection<Params.CheckEntry> getParameters() {
         configure();
         return Arrays.asList(
-                new Params.CheckEntry(Params.EntryLoggerStatus.EMPTY, -1, -1, -1, false),
-                new Params.CheckEntry(Params.EntryLoggerStatus.ONE_ENTRY, 0, 0, 10, true)
+                // ledgerId non esistente, entryId non esistente, location non valida, entry log vuoto -> Exception
+                new Params.CheckEntry(Params.EntryLoggerStatus.EMPTY, -1, -1, Params.Offset.NEGATIVE, false),
+                // ledgerId esistente, entryId esistente, location valida e corrispondente, entry log compatibile -> nulla
+                new Params.CheckEntry(Params.EntryLoggerStatus.CONTAINS_ENTRY, existingLedgerId, existingEntryId, Params.Offset.COMPATIBLE, true),
+                // ledgerId non esistente, entryId esistente (in un altro ledger), location valida ma non corrispondente, entry log non vuoto ma senza una entry compatibile -> Exception
+                new Params.CheckEntry(Params.EntryLoggerStatus.NOT_CONTAINS_ENTRY, nonExistingLedgerId, existingEntryId, Params.Offset.INCOMPATIBLE, false),
+                // ledgerId esistente, entryId non esistente, location non valida(negativa), entry log non vuoto ma senza una entry compatibile->Exception
+                new Params.CheckEntry(Params.EntryLoggerStatus.NOT_CONTAINS_ENTRY, existingLedgerId, nonExistingEntryId, Params.Offset.NEGATIVE, false),
+                // ledgerId esistente, entryId esistente, location valida ma non corrispondente, entry log non compatibile-> Exception
+                new Params.CheckEntry(Params.EntryLoggerStatus.NOT_CONTAINS_ENTRY, existingLedgerId, nonExistingEntryId, Params.Offset.INCOMPATIBLE, false),
+                // ledgerId esistente, entryId non esistente, location valida ma non corrispondente, entry log non compatibile -> Exception
+                new Params.CheckEntry(Params.EntryLoggerStatus.NOT_CONTAINS_ENTRY, existingLedgerId, nonExistingEntryId, Params.Offset.INCOMPATIBLE, false)
         );
     }
 
@@ -78,18 +86,19 @@ public class TestCheckEntry {
     @Test
     public void checkEntry() {
         // Se non ci sono eccezioni, mi attendo un successo.
-        boolean actualSuccess =  success(); // separata, così l'errore viene stampato
-        System.out.println("position: " + EntryLoggerUtil.getPositionInEntryLog());
-        assertEquals(String.format("Mi aspettavo : %s ma non è andata come previsto. Errore: %s", params.isExpectedSuccess(), error),params.isExpectedSuccess(),actualSuccess);
+        boolean actualSuccess = success(); // separata, così l'errore viene stampato
+        System.out.println("position: " + EntryLoggerUtil.getPositionInEntryLog(params.getLedgerId(), params.getEntryId()));
+        assertEquals(String.format("Mi aspettavo : %s ma non è andata come previsto. Errore: %s", params.isExpectedSuccess(), error), params.isExpectedSuccess(), actualSuccess);
         System.out.println(params.isExpectedSuccess() ? "Test corretto come previsto" : "Test fallito come previsto. Errore: " + error);
     }
 
     public boolean success() {
         try {
-            params.getEntryLogger().checkEntry(params.getLedgerId(), params.getEntryId(), params.getEntryOffset());
+            params.getEntryLogger().checkEntry(params.getLedgerId(), params.getEntryId(), params.getOffset());
             return true;
         } catch (Exception e) {
             error = e.getClass().getSimpleName() + ": " + e.getMessage();
+            e.printStackTrace();
             return false;
         }
     }
