@@ -22,6 +22,7 @@ package org.apache.bookkeeper.bookie;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,6 +76,13 @@ public class TestMoveToNewLocation {
         parameters.add(new Params.NewLocation(fileEsistente, Long.MAX_VALUE, false));
         parameters.add(new Params.NewLocation(fileEsistente, -1, false));
 
+
+        // parametri aggiunti in fase di aumento della coverage
+        File stessoFile = new File(CARTELLA_FILE, NOME_FILE);
+        stessoFile.getParentFile().mkdirs();
+        stessoFile.createNewFile();
+        parameters.add(new Params.NewLocation(stessoFile, 0, false));
+
         return parameters;
     }
 
@@ -92,6 +100,10 @@ public class TestMoveToNewLocation {
     @After
     public void eliminaFile() throws IOException {
         FileUtils.deleteDirectory(new File(NUOVA_CARTELLA_FILE));
+    }
+    @AfterClass
+    public static void eliminaTutto() throws IOException {
+        FileUtils.deleteDirectory(new File("/tmp/file-info"));
     }
 
     /**
@@ -111,7 +123,7 @@ public class TestMoveToNewLocation {
 
             fileInfo.moveToNewLocation(params.getFile(), params.getSize());
             assertFalse(params.isError());
-            assertFalse(file.exists()); // il file iniziale non deve esistere.
+            assertTrue(!file.exists() || params.getFile().equals(file)); // il file iniziale non deve esistere.
             // fileInfo = new FileInfo(fileInfo.getLf(), "testPasswd".getBytes(StandardCharsets.UTF_8), FileInfo.CURRENT_HEADER_VERSION);
             byte[] bf = readFile(fileInfo.getLf());
 

@@ -26,8 +26,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 
 import java.io.File;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -40,13 +42,13 @@ import static org.junit.Assert.*;
  * Test del metodo FileInfo::read
  */
 @RunWith(Parameterized.class)
-public class TestRead {
+public class TestWrite {
     private final Params.FileInfoWrite params;
     private static final String CARTELLA_FILE = "/tmp/file-info";
     private static final String NOME_FILE = IndexPersistenceMgr.getLedgerName(1);
     private static File file;
 
-    public TestRead(Params.FileInfoWrite params){
+    public TestWrite(Params.FileInfoWrite params){
         this.params = params;
     }
 

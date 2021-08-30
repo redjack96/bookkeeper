@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 /**
  * Classe che possiede al suo interno delle classi interne
  * utili per inizializzare i parametri dei test JUnit implementati.
+ * Implementata per non confondere i diversi parametri, che spesso sono tutti long.
  */
 public class Params {
     @Data // Permette di creare a runtime getter e setter.
