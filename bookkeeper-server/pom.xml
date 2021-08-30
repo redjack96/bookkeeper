@@ -310,7 +310,6 @@
               </targetClasses>
               <targetTests>
                 <param>org.apache.bookkeeper.bookie.Test*</param>
-                <param>org.apache.bookkeeper.client.Test*</param>
               </targetTests>
             </configuration>
           </plugin>

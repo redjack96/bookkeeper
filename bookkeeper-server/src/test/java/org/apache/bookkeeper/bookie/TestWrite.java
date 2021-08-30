@@ -29,6 +29,7 @@ import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -47,15 +48,17 @@ public class TestWrite {
     private static final String CARTELLA_FILE = "/tmp/file-info";
     private static final String NOME_FILE = IndexPersistenceMgr.getLedgerName(1);
     private static File file;
+    private static FileInfo fileInfo;
 
     public TestWrite(Params.FileInfoWrite params){
         this.params = params;
     }
 
     @Before
-    public void createFile() {
+    public void createFile() throws IOException {
         file = new File(CARTELLA_FILE, NOME_FILE);
         file.getParentFile().mkdirs();
+        fileInfo = new FileInfo(file, "testPasswd".getBytes(StandardCharsets.UTF_8), FileInfo.CURRENT_HEADER_VERSION);
     }
 
     private static List<Params.FileInfoWrite> configure() {
@@ -80,8 +83,10 @@ public class TestWrite {
         Params.FileInfoWrite p7 = new Params.FileInfoWrite(legalEmptyArray, 0, legalEmptySize, false);
         Params.FileInfoWrite p8 = new Params.FileInfoWrite(legalEmptyArray, 1, legalEmptySize, false);
         Params.FileInfoWrite p9 = new Params.FileInfoWrite(legalEmptyArray, 100, legalEmptySize, false);
+        // aggiunto per mutation testing
+        Params.FileInfoWrite p10 = new Params.FileInfoWrite(legalEmptyArray, -10000, legalEmptySize, true);
 
-        return Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8, p9);
+        return Arrays.asList(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
     }
 
     @Parameterized.Parameters(name = "{index} : {0}")
@@ -107,12 +112,12 @@ public class TestWrite {
     @Test
     public void write(){
         try {
-            FileInfo fileInfo = new FileInfo(file, "testPasswd".getBytes(StandardCharsets.UTF_8), FileInfo.CURRENT_HEADER_VERSION);
             // Prima scrittura
             assertEquals(params.getExpectedWrittenBytes(), fileInfo.write(params.getBuffs(), params.getPosition()));
             assertFalse(params.isError());
             if(params.getBuffs().length > 0) {
                 System.out.printf("Scritti correttamente %d bytes%n", params.getExpectedWrittenBytes());
+                assertEquals(Math.max(params.getExpectedWrittenBytes() + params.getPosition(), 0), fileInfo.size());
             } else {
                 System.out.println("Scritti 0 bytes.");
             }
@@ -121,6 +126,7 @@ public class TestWrite {
             assertTrue(params.isError());
         }
     }
+
     private static ByteBuffer createBuffer(String content) {
         return ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8));
     }
